@@ -1,0 +1,13 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#app {
+    background-color: white;
+    width: 80%;
+    height: 60%;
+    margin: auto;
+}
