@@ -1,4 +1,5 @@
 let servers = [];
+let serverID = 0; // Will be taken from a DB once added
 let hasEntered = false;
 let hasExited = false;
 
@@ -39,12 +40,15 @@ mp.events.addCommand("confirm", (player, _, name = "defaultCamera") => {
     let server = servers.filter((element) => element.playerID == player.id);
     server[0].cameras.push({
         "colshape": player.camera[0],
+        "serverName": server[0].name,
+        "serverID": server[0].id,
         "name": name,
         "playerID": player.id,
         "location": player.camera[1],
+        "size": player.camera[2],
         "active": true,
         "logs": []
-    })
+    });
 
     player.call("cameraColDestroy");
     player.cameraActive = !player.cameraActive;
@@ -95,10 +99,8 @@ mp.events.addCommand("checklogs", (player, _, server, camera) => {
 mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
     if (player.serverLimit < 1) {
         let placement = new mp.Vector3(player.position.x + Math.sin(-player.heading * Math.PI / 180) * 1.45, player.position.y + Math.cos(-player.heading * Math.PI / 180) * 1.45, player.position.z - 0.98);
-        
-        cameraMarker = mp.markers.new(1, placement, 25, {
-            color: [0, 255, 0, 255]
-        });
+
+        player.call("serverShowcase", [placement, 25])
 
         // xm_base_cia_server_01 - Inside Server
         // prop_elecbox_19 - Outside Server
@@ -111,17 +113,24 @@ mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
         servers.push({
             "colshape": player.server,
             "name": name,
+            "id": serverID,
             "playerID": player.id,
             "location": placement,
             "active": true,
             "cameras": []
         });
 
+        serverID++;
         player.serverLimit++;
     }
 });
 
 mp.events.addCommand("toggleCams", (player) => {
+    let currentServer = player.character.nearServer[1];
+
+    if (!player.character.nearServer[0]) return player.outputChatBox(`Try going to a server`)
+    if (currentServer.playerID !== player.id) return player.outputChatBox(`This is not your server`);
+    if (currentServer.cameras.length === 0) return player.outputChatBox(`${currentServer.name} has no cameras within`);
     if (!player.togglingCams) {
         let currentCams = [];
 
@@ -174,19 +183,24 @@ mp.events.addCommand("repair", (player) => {
 });
 
 mp.events.add('playerEnterColshape', (player, colshape) => {
+    let serverIndex = servers.findIndex(server => server.cameras.some(camera => camera.colshape.id === colshape.id));
 
-    servers[0].cameras.forEach(element => {
-        if (element.colshape.id == colshape.id && element.active === true && hasEntered == false) {
-            if (element.logs.length <= 200) element.logs.shift();
+    if (servers[serverIndex]) {
+        servers[serverIndex].cameras.forEach(element => {
+            if (element.colshape.id == colshape.id && element.active === true && hasEntered == false) {
+                if (element.playerID == player.id && player.togglingCams) player.call("withinCameraColshape", [element])
+                if (element.logs.length <= 200) element.logs.shift();
 
-            element.logs.push(logs(player, "entering"));
-            hasEntered = !hasEntered;
+                element.logs.push(logs(player, "entering"));
 
-            sleep(10000).then(() => {
-                hasEntered = !hasEntered
-            });
-        }
-    });
+                hasEntered = !hasEntered;
+
+                sleep(10000).then(() => {
+                    hasEntered = !hasEntered
+                });
+            }
+        });
+    }
 
     servers.forEach(element => {
         if (element.colshape.id == colshape.id) {
@@ -196,24 +210,47 @@ mp.events.add('playerEnterColshape', (player, colshape) => {
 });
 
 mp.events.add('playerExitColshape', (player, colshape) => {
-    servers[0].cameras.forEach(element => {
-        if (element.colshape.id == colshape.id && element.active === true && hasExited == false) {
-            if (element.logs.length <= 200) element.logs.shift();
+    let serverIndex = servers.findIndex(server => server.cameras.some(camera => camera.colshape.id === colshape.id));
 
-            element.logs.push(logs(player, "exiting"));
-            hasExited = !hasExited;
+    if (servers[serverIndex]) {
+        servers[serverIndex].cameras.forEach(element => {
+            if (element.colshape.id == colshape.id && element.active === true && hasExited == false) {
+                if (element.logs.length <= 200) element.logs.shift();
 
-            sleep(10000).then(() => {
-                hasExited = !hasExited
-            });
-        }
-    });
+                element.logs.push(logs(player, "exiting"));
+                hasExited = !hasExited;
+
+                sleep(10000).then(() => {
+                    hasExited = !hasExited
+                });
+            }
+        });
+    }
 
     servers.forEach(element => {
         if (element.colshape.id == colshape.id) {
             player.character.nearServer = !player.character.nearServer;
         }
     });
+});
+
+mp.events.add('removeCamera', (object) => {
+    let serverIndex = servers.findIndex(server => server.cameras.some(camera => camera.location === object.camera[1]));
+
+    servers[serverIndex].cameras.forEach(camera => {
+        if (object.camera[1] === camera.location) {
+            console.dir(camera)
+        }
+    })
+
+
+    /*
+    servers[serverIndex].cameras.forEach(camera => {
+        if (object.camera[1] === camera.location) {
+            servers.[serverIndex].cameras
+        }
+    })
+    */
 });
 
 logs = (player, type) => {
@@ -239,10 +276,10 @@ logs = (player, type) => {
     return playerLog;
 }
 
-cameraPreview = (player, type) => {
-    player.camera = [mp.colshapes.newSphere(player.position.x, player.position.y, player.position.z, type), player.position];
+cameraPreview = (player, size) => {
+    player.camera = [mp.colshapes.newSphere(player.position.x, player.position.y, player.position.z, size), player.position, size];
 
-    player.call("cameraShowcase", [type]);
+    player.call("cameraShowcase", [size]);
 }
 
 sleep = (ms) => {
