@@ -30,7 +30,8 @@ mp.events.add('cameraShowcaseAll', (cameras) => {
     });
 })
 
-mp.events.add('cameraColDestroy', () => {
+mp.events.add('cameraColDestroy', (deleteCameraLocation) => {
+
     if (currentInstance) {
         currentInstance.marker.destroy();
         currentInstance.label.destroy();
@@ -43,9 +44,15 @@ mp.events.add('cameraColDestroy', () => {
     }
 });
 
-mp.events.add('withinCameraColshape', (camera) => {
-    withinCameraLocation = true;
-    cameraObject = camera;
+mp.events.add('withinCameraColshape', (toggle, camera) => {
+    if (toggle) {
+        withinCameraLocation = true;
+        cameraObject = camera;
+        mp.gui.chat.push(`[withinCameraColshape] entered ${camera.name}`)
+    } else {
+        cameraObject = [];
+        mp.gui.chat.push(`[withinCameraColshape] exited ${camera.name}`)
+    }
 })
 
 mp.keys.bind(0x71, true, () => {
@@ -63,10 +70,10 @@ mp.keys.bind(0x72, true, () => {
 
 mp.keys.bind(0x2E, true, () => {
     if (withinCameraLocation) {
-        mp.events.callRemote("removeCamera", [cameraObject]);
-        mp.gui.chat.push("Yes")
+        mp.events.callRemote("removeCamera", JSON.stringify(cameraObject));
+        mp.gui.chat.push(`[Delete] executed in colshape ${cameraObject.name}`)
         withinCameraLocation = !withinCameraLocation;
-        cameraObject = null;
+        cameraObject = [];
     }
 });
 
