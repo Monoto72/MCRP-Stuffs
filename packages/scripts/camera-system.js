@@ -1,7 +1,5 @@
 let servers = [];
 let serverID = 0; // Will be taken from a DB once added
-let hasEntered = false;
-let hasExited = false;
 
 mp.events.addCommand("place", (player, _, cameraType) => {
     let small = 2;
@@ -187,17 +185,11 @@ mp.events.add('playerEnterColshape', (player, colshape) => {
 
     if (servers[serverIndex]) {
         servers[serverIndex].cameras.forEach(element => {
-            if (element.colshape.id == colshape.id && element.active === true && hasEntered == false) {
-                if (element.playerID == player.id && player.togglingCams) player.call("withinCameraColshape", [element])
+            if (element.colshape.id == colshape.id && element.active === true) {
+                if (element.playerID == player.id && player.togglingCams) player.call("withinCameraColshape", [true, element])
                 if (element.logs.length <= 200) element.logs.shift();
 
                 element.logs.push(logs(player, "entering"));
-
-                hasEntered = !hasEntered;
-
-                sleep(10000).then(() => {
-                    hasEntered = !hasEntered
-                });
             }
         });
     }
@@ -214,15 +206,11 @@ mp.events.add('playerExitColshape', (player, colshape) => {
 
     if (servers[serverIndex]) {
         servers[serverIndex].cameras.forEach(element => {
-            if (element.colshape.id == colshape.id && element.active === true && hasExited == false) {
+            if (element.colshape.id == colshape.id && element.active === true) {
+                if (element.playerID == player.id && player.togglingCams) player.call("withinCameraColshape", [false, element])
                 if (element.logs.length <= 200) element.logs.shift();
 
                 element.logs.push(logs(player, "exiting"));
-                hasExited = !hasExited;
-
-                sleep(10000).then(() => {
-                    hasExited = !hasExited
-                });
             }
         });
     }
@@ -234,23 +222,19 @@ mp.events.add('playerExitColshape', (player, colshape) => {
     });
 });
 
-mp.events.add('removeCamera', (object) => {
-    let serverIndex = servers.findIndex(server => server.cameras.some(camera => camera.location === object.camera[1]));
+mp.events.add('removeCamera', (player, localCamera) => {
+    localCamera = JSON.parse(localCamera);
+    let localCameraLocation = new mp.Vector3(localCamera.location.x, localCamera.location.y, localCamera.location.z);
+    let serverIndex = servers.findIndex(server => server.cameras.some(camera => localCameraLocation.equals(camera.location)));
+    let cameraIndex = 0;
 
     servers[serverIndex].cameras.forEach(camera => {
-        if (object.camera[1] === camera.location) {
-            console.dir(camera)
+        if (localCameraLocation.equals(camera.location)) {
+            player.call("cameraColDestroy", [camera.location])
+            servers[serverIndex].cameras.splice(cameraIndex, 1);
         }
+        cameraIndex++;
     })
-
-
-    /*
-    servers[serverIndex].cameras.forEach(camera => {
-        if (object.camera[1] === camera.location) {
-            servers.[serverIndex].cameras
-        }
-    })
-    */
 });
 
 logs = (player, type) => {
