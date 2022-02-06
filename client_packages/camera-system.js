@@ -30,17 +30,27 @@ mp.events.add('cameraShowcaseAll', (cameras) => {
     });
 })
 
-mp.events.add('cameraColDestroy', (deleteCameraLocation) => {
-
-    if (currentInstance) {
-        currentInstance.marker.destroy();
-        currentInstance.label.destroy();
-        currentInstance = null;
+mp.events.add('cameraColDestroy', (deletedCamera) => {
+    if (!deletedCamera) {
+        if (currentInstance) {
+            currentInstance.marker.destroy();
+            currentInstance.label.destroy();
+            currentInstance = null;
+        } else {
+            instances.forEach(element => {
+                element.marker.destroy();
+                element.label.destroy();
+            });
+        }
     } else {
-        instances.forEach(element => {
-            element.marker.destroy();
-            element.label.destroy();
-        });
+        let deletedLocation = new mp.Vector3(deletedCamera.location.x, deletedCamera.location.y, deletedCamera.location.z);
+        let instanceIndex = instances.findIndex(element => (mp.game.system.vdist(element.location.x, element.location.y, element.location.z, deletedLocation.x, deletedLocation.y, deletedLocation.z)) == 1);
+
+        instances[instanceIndex].marker.destroy();
+        instances[instanceIndex].label.destroy();
+        instances.splice(instanceIndex, 1);
+
+        cameraObject = [];
     }
 });
 
@@ -53,7 +63,7 @@ mp.events.add('withinCameraColshape', (toggle, camera) => {
         cameraObject = [];
         mp.gui.chat.push(`[withinCameraColshape] exited ${camera.name}`)
     }
-})
+});
 
 mp.keys.bind(0x71, true, () => {
     if (!browser) {
@@ -73,15 +83,16 @@ mp.keys.bind(0x2E, true, () => {
         mp.events.callRemote("removeCamera", JSON.stringify(cameraObject));
         mp.gui.chat.push(`[Delete] executed in colshape ${cameraObject.name}`)
         withinCameraLocation = !withinCameraLocation;
-        cameraObject = [];
     }
 });
 
 
-localCameras = (name, location, type, serverName = "Currently within", serverID = "") => {
+localCameras = (name, location, type, serverName = "Currently within") => {
+    const markerLocation = location.clone();
+    const labelLocation = location.clone();
 
-    const labelLocation = location.clone()
-    labelLocation.z = labelLocation.z+1.5;
+    markerLocation.z = labelLocation.z + 0.02;
+    labelLocation.z = labelLocation.z + 1.5;
 
     size = () => {
         let size = "";
@@ -102,14 +113,16 @@ localCameras = (name, location, type, serverName = "Currently within", serverID 
     }
 
     const camera = {
-        "marker": mp.markers.new(1, location, type, {
-            color: [255, 255, 255, 255]
+        "marker": mp.markers.new(25, markerLocation, type, {
+            color: [255, 255, 255, 255],
+            rotation: new mp.Vector3(0, 0, 90)
         }),
         "label": mp.labels.new(`Camera: ${name} \n Server: ${serverName} \n Size: ${size(type)}`, labelLocation, {
             los: true,
             font: 1,
             drawDistance: 8,
-        })
+        }),
+        "location": location
     }
     return camera;
 }

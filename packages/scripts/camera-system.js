@@ -126,9 +126,12 @@ mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
 mp.events.addCommand("toggleCams", (player) => {
     let currentServer = player.character.nearServer[1];
 
-    if (!player.character.nearServer[0]) return player.outputChatBox(`Try going to a server`)
-    if (currentServer.playerID !== player.id) return player.outputChatBox(`This is not your server`);
-    if (currentServer.cameras.length === 0) return player.outputChatBox(`${currentServer.name} has no cameras within`);
+    if (currentServer.cameras.length === 0 && !player.togglingCams) {
+        if (!player.character.nearServer[0]) return player.outputChatBox(`Try going to a server`)
+        if (currentServer.playerID !== player.id) return player.outputChatBox(`This is not your server`);
+        if (currentServer.cameras.length === 0) return player.outputChatBox(`${currentServer.name} has no cameras within`);
+    }
+
     if (!player.togglingCams) {
         let currentCams = [];
 
@@ -152,9 +155,9 @@ mp.events.addCommand("toggleCams", (player) => {
 });
 
 mp.events.addCommand("test", (player) => {
-    console.dir(servers);
-    console.dir(servers[0].cameras)
-})
+     console.dir(servers);
+     console.dir(servers[0].cameras)
+});
 
 // && player.character.nearServer[1].playerID !== playerID
 mp.events.addCommand("cut", (player) => {
@@ -230,7 +233,7 @@ mp.events.add('removeCamera', (player, localCamera) => {
 
     servers[serverIndex].cameras.forEach(camera => {
         if (localCameraLocation.equals(camera.location)) {
-            player.call("cameraColDestroy", [camera.location])
+            player.call("cameraColDestroy", [camera])
             servers[serverIndex].cameras.splice(cameraIndex, 1);
         }
         cameraIndex++;
