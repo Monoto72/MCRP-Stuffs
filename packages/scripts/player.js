@@ -5,7 +5,7 @@ mp.events.add('playerJoin', (player) => {
     player.cameraActive = false;
     player.togglingCams = false;
     player.character.nearServer = false;
-    player.serverLimit = 0;
+    player.serverCount = 0;
     player.gender = "Male"
 
     mp.players.forEach(_player => {

@@ -1,12 +1,11 @@
 let servers = [];
-let serverID = 0; // Will be taken from a DB once added
 
 mp.events.addCommand("place", (player, _, cameraType) => {
     let small = 2;
     let medium = 4;
     let large = 6;
 
-    if (player.serverLimit != 1) return player.outputChatBox("You currently don't have a server: /deploy");
+    if (player.serverCount != 1) return player.outputChatBox("You currently don't have a server: /deploy");
     const serverArea = servers[0].location.subtract(player.position).length();
     if (serverArea >= 12) return player.outputChatBox(`You are not within the servers range`);
     if (player.togglingCams) return player.outputChatBox("You are currently toggling cameras");
@@ -14,19 +13,19 @@ mp.events.addCommand("place", (player, _, cameraType) => {
     if (player.cameraActive) return player.outputChatBox(`You are already placing a camera`);
     if (!cameraType) return player.outputChatBox(`Invalid syntax: /place <small|medium|large>`);
 
-    switch(cameraType) {
+    switch (cameraType) {
         case "small":
             player.cameraActive = !player.cameraActive;
             cameraPreview(player, small)
-        break;
+            break;
         case "medium":
             player.cameraActive = !player.cameraActive;
             cameraPreview(player, medium)
-        break;
+            break;
         case "large":
             player.cameraActive = !player.cameraActive;
             cameraPreview(player, large)
-        break;
+            break;
         default:
             player.outputChatBox(`Invalid syntax: ${cameraType} does not exist! /place <small|medium|large>`);
     }
@@ -95,7 +94,7 @@ mp.events.addCommand("checklogs", (player, _, server, camera) => {
 // /checklogs defaultServer test
 
 mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
-    if (player.serverLimit < 1) {
+    if (player.serverCount < 2) {
         let placement = new mp.Vector3(player.position.x + Math.sin(-player.heading * Math.PI / 180) * 1.45, player.position.y + Math.cos(-player.heading * Math.PI / 180) * 1.45, player.position.z - 0.98);
 
         player.call("serverShowcase", [placement, 25])
@@ -111,15 +110,14 @@ mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
         servers.push({
             "colshape": player.server,
             "name": name,
-            "id": serverID,
+            "id": servers.length,
             "playerID": player.id,
             "location": placement,
             "active": true,
             "cameras": []
         });
 
-        serverID++;
-        player.serverLimit++;
+        player.serverCount++;
     }
 });
 
@@ -155,8 +153,9 @@ mp.events.addCommand("toggleCams", (player) => {
 });
 
 mp.events.addCommand("test", (player) => {
-     console.dir(servers);
-     console.dir(servers[0].cameras)
+    console.dir(servers);
+    //console.dir(servers[0].cameras)
+    console.log(servers.length)
 });
 
 // && player.character.nearServer[1].playerID !== playerID
@@ -242,9 +241,9 @@ mp.events.add('removeCamera', (player, localCamera) => {
 
 logs = (player, type) => {
     const playerLog = {
-        "name":player.name,
-        "playerID":player.id,
-        "clothing":{
+        "name": player.name,
+        "playerID": player.id,
+        "clothing": {
             "head": player.getClothes(0),
             "beard": player.getClothes(1),
             "hair": player.getClothes(2),

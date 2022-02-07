@@ -18,14 +18,14 @@ mp.events.add('serverShowcase', (location, size) => {
 });
 
 mp.events.add('cameraShowcase', (type) => {
-    const cameraPreview = new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z-1);
+    const cameraPreview = new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z - 1);
 
     currentInstance = localCameras("Currently Placing", cameraPreview, type);
 });
 
 mp.events.add('cameraShowcaseAll', (cameras) => {
     cameras.forEach(element => {
-        let cameraLocation = new mp.Vector3(element.location.x, element.location.y, element.location.z-1);
+        let cameraLocation = new mp.Vector3(element.location.x, element.location.y, element.location.z - 1);
         instances.push(localCameras(element.name, cameraLocation, element.size, element.serverName));
     });
 })
@@ -68,13 +68,15 @@ mp.events.add('withinCameraColshape', (toggle, camera) => {
 mp.keys.bind(0x71, true, () => {
     if (!browser) {
         browser = mp.browsers.new(`package://webpages/camera-logs.html`);
+        mp.gui.cursor.visible = true;
     }
 });
 
 mp.keys.bind(0x72, true, () => {
-    if (browser) { 
+    if (browser) {
         browser.destroy();
         browser = null;
+        mp.gui.cursor.visible = false;
     }
 });
 

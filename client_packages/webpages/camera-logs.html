@@ -1,15 +1,60 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>Camera Logs</title>
-	<link rel="stylesheet" href="camera-logs.css">
+	<link href="./public/output.css" rel="stylesheet">
 </head>
 
 
 <body>
-	<div id="app">
-		<h1>test</h1>
+	<div class="container mx-auto flex justify-center items-center h-screen">
+		<div class="w-3/5 bg-white-800 h-auto border border-blue-500 text-blue-500 text-center bg-gray-200">
+			<div class="flex text-2xl w-full bg-blue-500 text-white py-2 p-4">
+				<span class="flex-grow text-center">Camera Logs Viewer</span>
+			</div>
+			<div class="flex-row h-14 w-full flex p-2">
+				<div class="w-2/5">
+					<select class="w-11/12 py-2">
+						<option>defaultServer</option>
+					</select>
+				</div>
+				<input type="text" placeholder="From Date (YYYY-MM-DD)" class="w-3/12 px-2 mr-2"/>
+				<input type="text" placeholder="To Date (YYYY-MM-DD)" class="w-3/12 px-2"/>
+				<button class="bg-blue-500 text-white p-2 w-1/5 ml-2 border border-blue-500">Search</button>
+			</div>
+			<div class="flex-row" style="min-height: 468px;">
+				<span>
+					Searching...
+				</span>
+				<span>
+					There are no transactions for your query
+				</span>
+				<div>
+					<div class="flex w-full p-4 border-b border-t border-gray-500">
+						<div class="w-1/7 select-none text-center"><b>Type</b></div>
+						<div class="w-1/7 select-none text-center"><b>Character</b></div>
+						<div class="w-1/7 select-none text-center"><b>Date</b></div>
+						<div class="w-1/7 select-none text-center"><b>Amount</b></div>
+						<div class="w-3/7 select-none text-center"><b>Reason</b></div>
+					</div>
+					<div class="flex w-full p-2 border-b border-gray-300">
+						<div class="w-1/7 select-none text-center">Type</div>
+						<div class="w-1/7 select-none text-center">Character</div>
+						<div class="w-1/7 select-none text-center">Date</div>
+						<div class="w-1/7 select-none text-center">Amount</div>
+						<div class="w-4/7 select-none text-center">Reason</div>
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-row h-14 overflow-y-auto p-2">
+				<button class="bg-blue-500 text-white p-2 w-1/6 mr-2 border border-blue-500">Previous Page</button>
+				<div class="w-4/6 h-14 p-2"><b>Page 1</b></div>
+				<button class="bg-blue-500 text-white p-2 w-1/6 ml-2 border border-blue-500">Next Page</button>
+			</div>
+		</div>
 	</div>
 	<script src="camera-logs.js"></script>
 </body>
+
 </html>

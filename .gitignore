@@ -7,3 +7,9 @@ dotnet
 bin
 plugins
 maps
+node_modules
+package.json
+package-lock.json
+src
+client_packages/webpages/public
+tailwind.config.js
