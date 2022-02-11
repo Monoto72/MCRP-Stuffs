@@ -56,7 +56,6 @@ mp.events.addCommand("car", (player, arr) => {
 
     if (arr) {
         let mods = arr.split(", ");
-        console.dir(mods);
 
         modifications(player.character, mods);
     }

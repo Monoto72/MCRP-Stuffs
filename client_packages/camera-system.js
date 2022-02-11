@@ -3,58 +3,60 @@ let currentInstance;
 let browser;
 let withinCameraLocation = false;
 let cameraObject = [];
+let logs = [];
 
+// Marker Handlers
+mp.events.add({
+    "serverShowcase" : (location, size) => {
+        let serverPreview;
 
-mp.events.add('serverShowcase', (location, size) => {
-    let serverPreview;
+        serverPreview = mp.markers.new(1, location, size, {
+            color: [0, 255, 0, 255]
+        });
 
-    serverPreview = mp.markers.new(1, location, size, {
-        color: [0, 255, 0, 255]
-    });
+        setTimeout(() => {
+            serverPreview.destroy();
+        }, 10000)
+    },
 
-    setTimeout(() => {
-        serverPreview.destroy();
-    }, 10000)
-});
+    "cameraShowcase" : (type) => {
+        const cameraPreview = new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z - 1);
+        currentInstance = localCameras("Currently Placing", cameraPreview, type);
+    },
 
-mp.events.add('cameraShowcase', (type) => {
-    const cameraPreview = new mp.Vector3(mp.players.local.position.x, mp.players.local.position.y, mp.players.local.position.z - 1);
+    "cameraShowcaseAll" : (cameras) => {
+        cameras.forEach(element => {
+            let cameraLocation = new mp.Vector3(element.location.x, element.location.y, element.location.z - 1);
+            instances.push(localCameras(element.name, cameraLocation, element.size, element.serverName));
+        });
+    },
 
-    currentInstance = localCameras("Currently Placing", cameraPreview, type);
-});
-
-mp.events.add('cameraShowcaseAll', (cameras) => {
-    cameras.forEach(element => {
-        let cameraLocation = new mp.Vector3(element.location.x, element.location.y, element.location.z - 1);
-        instances.push(localCameras(element.name, cameraLocation, element.size, element.serverName));
-    });
-})
-
-mp.events.add('cameraColDestroy', (deletedCamera) => {
-    if (!deletedCamera) {
-        if (currentInstance) {
-            currentInstance.marker.destroy();
-            currentInstance.label.destroy();
-            currentInstance = null;
+    "cameraColDestroy" : (deletedCamera) => {
+        if (!deletedCamera) {
+            if (currentInstance) {
+                currentInstance.marker.destroy();
+                currentInstance.label.destroy();
+                currentInstance = null;
+            } else {
+                instances.forEach(element => {
+                    element.marker.destroy();
+                    element.label.destroy();
+                });
+            }
         } else {
-            instances.forEach(element => {
-                element.marker.destroy();
-                element.label.destroy();
-            });
+            let deletedLocation = new mp.Vector3(deletedCamera.location.x, deletedCamera.location.y, deletedCamera.location.z);
+            let instanceIndex = instances.findIndex(element => (mp.game.system.vdist(element.location.x, element.location.y, element.location.z, deletedLocation.x, deletedLocation.y, deletedLocation.z)) == 1);
+    
+            instances[instanceIndex].marker.destroy();
+            instances[instanceIndex].label.destroy();
+            instances.splice(instanceIndex, 1);
+    
+            cameraObject = [];
         }
-    } else {
-        let deletedLocation = new mp.Vector3(deletedCamera.location.x, deletedCamera.location.y, deletedCamera.location.z);
-        let instanceIndex = instances.findIndex(element => (mp.game.system.vdist(element.location.x, element.location.y, element.location.z, deletedLocation.x, deletedLocation.y, deletedLocation.z)) == 1);
-
-        instances[instanceIndex].marker.destroy();
-        instances[instanceIndex].label.destroy();
-        instances.splice(instanceIndex, 1);
-
-        cameraObject = [];
     }
 });
 
-mp.events.add('withinCameraColshape', (toggle, camera) => {
+mp.events.add("withinCameraColshape", (toggle, camera) => {
     if (toggle) {
         withinCameraLocation = true;
         cameraObject = camera;
@@ -65,10 +67,20 @@ mp.events.add('withinCameraColshape', (toggle, camera) => {
     }
 });
 
+mp.events.add("cameraLogs", (cameraLogs) => {
+    logs = cameraLogs;
+});
+
+mp.events.add("testing", (text) => {
+    console.log(text);
+})
+
 mp.keys.bind(0x71, true, () => {
     if (!browser) {
-        browser = mp.browsers.new(`package://webpages/camera-logs.html`);
         mp.gui.cursor.visible = true;
+        browser = mp.browsers.new(`package://webpages/camera-logs.html`);
+        logs = mp.events.callRemote("cameraLogs", 0);
+        browser.execute(`populateLogs(${logs})`)
     }
 });
 

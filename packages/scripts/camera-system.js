@@ -153,9 +153,8 @@ mp.events.addCommand("toggleCams", (player) => {
 });
 
 mp.events.addCommand("test", (player) => {
-    console.dir(servers);
-    //console.dir(servers[0].cameras)
-    console.log(servers.length)
+    console.dir(servers[0].cameras[0].logs);
+    console.dir(servers[0].cameras)
 });
 
 // && player.character.nearServer[1].playerID !== playerID
@@ -239,6 +238,19 @@ mp.events.add('removeCamera', (player, localCamera) => {
     })
 });
 
+mp.events.add("cameraLogs", (player, cameraID) => {
+    let cameraLogs = [];
+
+    console.log(cameraID)
+
+    servers[0].cameras[cameraID].logs.forEach(entry => {
+        cameraLogs.push(entry);
+    })
+
+    player.call("cameraLogs", [cameraLogs])
+    console.dir(cameraLogs)
+})
+
 logs = (player, type) => {
     const playerLog = {
         "name": player.name,
@@ -266,8 +278,4 @@ cameraPreview = (player, size) => {
     player.camera = [mp.colshapes.newSphere(player.position.x, player.position.y, player.position.z, size), player.position, size];
 
     player.call("cameraShowcase", [size]);
-}
-
-sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
