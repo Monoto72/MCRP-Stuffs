@@ -69,30 +69,6 @@ mp.events.addCommand("servers", (player) => {
     player.outputChatBox(`Active Servers: ${names.slice(0, names.length - 2)}`)
 });
 
-mp.events.addCommand("checklogs", (player, _, server, camera) => {
-    if (!server || !camera) return player.outputChatBox(`Invalid syntax: /checklogs <server> <camera>`);
-    servers.forEach(element => {
-        if (element.playerID == player.id) {
-            if (element.name.toLowerCase() == server.toLowerCase()) {
-                element.cameras.forEach(cameras => {
-                    if (cameras.name.toLowerCase() == camera.toLowerCase()) {
-                        if (cameras.logs.length > 0) {
-                            cameras.logs.forEach(log => {
-                                let date = new Date(log.time);
-                                let formatedDate = ("[" + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes() + "]");
-                                player.outputChatBox(`(${log.playerID}) ${formatedDate} a male would be seen ${log.type} wearing a Super Kawaii Mask, alongside a Heavy Pistol in his right hand`);
-                            });
-                        } else if (element.active === false) return player.outputChatBox("Server is down, unfortunately all logs have been deleted from the server");
-                        else return player.outputChatBox("No logs can be found");
-                    }
-                });
-            }
-        }
-    });
-});
-
-// /checklogs defaultServer test
-
 mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
     if (player.serverCount < 2) {
         let placement = new mp.Vector3(player.position.x + Math.sin(-player.heading * Math.PI / 180) * 1.45, player.position.y + Math.cos(-player.heading * Math.PI / 180) * 1.45, player.position.z - 0.98);
@@ -153,8 +129,7 @@ mp.events.addCommand("toggleCams", (player) => {
 });
 
 mp.events.addCommand("test", (player) => {
-    console.dir(servers[0].cameras[0].logs);
-    console.dir(servers[0].cameras)
+    console.dir(servers[0].cameras[0]);
 });
 
 // && player.character.nearServer[1].playerID !== playerID
@@ -188,7 +163,7 @@ mp.events.add('playerEnterColshape', (player, colshape) => {
         servers[serverIndex].cameras.forEach(element => {
             if (element.colshape.id == colshape.id && element.active === true) {
                 if (element.playerID == player.id && player.togglingCams) player.call("withinCameraColshape", [true, element])
-                if (element.logs.length <= 200) element.logs.shift();
+                if (element.logs.length >= 200) element.logs.shift();
 
                 element.logs.push(logs(player, "entering"));
             }
@@ -209,7 +184,7 @@ mp.events.add('playerExitColshape', (player, colshape) => {
         servers[serverIndex].cameras.forEach(element => {
             if (element.colshape.id == colshape.id && element.active === true) {
                 if (element.playerID == player.id && player.togglingCams) player.call("withinCameraColshape", [false, element])
-                if (element.logs.length <= 200) element.logs.shift();
+                if (element.logs.length >= 200) element.logs.shift();
 
                 element.logs.push(logs(player, "exiting"));
             }
@@ -241,14 +216,23 @@ mp.events.add('removeCamera', (player, localCamera) => {
 mp.events.add("cameraLogs", (player, cameraID) => {
     let cameraLogs = [];
 
-    console.log(cameraID)
+    if (!servers[0]) { 
+        cameraLogs = `Server does not exist`
+    } else if (!servers[0].cameras[cameraID]) {
+        cameraLogs = `Camera ${cameraID} does not exist`
+    } else if (servers[0].cameras[cameraID].logs.length == 0) {
+        cameraLogs = `Camera ${cameraID} has no logs within`
+    }
 
-    servers[0].cameras[cameraID].logs.forEach(entry => {
-        cameraLogs.push(entry);
-    })
+    if (cameraLogs.length == 0) {
+        servers[0].cameras[cameraID].logs.forEach(entry => {
+            cameraLogs.push(entry);
+        })
+    }
+
+    console.dir(cameraLogs)
 
     player.call("cameraLogs", [cameraLogs])
-    console.dir(cameraLogs)
 })
 
 logs = (player, type) => {

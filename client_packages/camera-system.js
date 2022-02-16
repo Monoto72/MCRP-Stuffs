@@ -67,6 +67,10 @@ mp.events.add("withinCameraColshape", (toggle, camera) => {
     }
 });
 
+mp.events.add('browserDomReady', (browser) => {
+    browser.execute(`populateLogs(${JSON.stringify(logs)})`);
+});
+
 mp.events.add("cameraLogs", (cameraLogs) => {
     logs = cameraLogs;
 });
@@ -79,8 +83,7 @@ mp.keys.bind(0x71, true, () => {
     if (!browser) {
         mp.gui.cursor.visible = true;
         browser = mp.browsers.new(`package://webpages/camera-logs.html`);
-        logs = mp.events.callRemote("cameraLogs", 0);
-        browser.execute(`populateLogs(${logs})`)
+        mp.events.callRemote("cameraLogs", 0);
     }
 });
 
