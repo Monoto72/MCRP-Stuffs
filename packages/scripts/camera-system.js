@@ -69,6 +69,7 @@ mp.events.addCommand("servers", (player) => {
     player.outputChatBox(`Active Servers: ${names.slice(0, names.length - 2)}`)
 });
 
+
 mp.events.addCommand("deploy", (player, _, name = "defaultServer") => {
     if (player.serverCount < 2) {
         let placement = new mp.Vector3(player.position.x + Math.sin(-player.heading * Math.PI / 180) * 1.45, player.position.y + Math.cos(-player.heading * Math.PI / 180) * 1.45, player.position.z - 0.98);
@@ -252,6 +253,7 @@ logs = (player, type) => {
             "car": player.vehicle.model,
             "plate": player.vehicle.numberPlate
         },
+        "weapon": player.weapon == null ? null : player.weapon,
         "type": type,
         "time": Date.now()
     }
